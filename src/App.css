@@ -1,0 +1,35 @@
+.page {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100vw;
+    height: 100vh;
+}
+
+.history-list,
+.ban-list {
+    background-color: rgba(255, 255, 255, 0.555);
+    width: 300px;
+    height: 95vh;
+    display: flex;
+    justify-content: flex-start;
+    align-items: center;
+    text-align: center;
+    flex-direction: column;
+}
+
+.history-list {
+    margin-left: 1em;
+}
+
+.ban-list {
+    margin-right: 1em;
+}
+
+.film-listing-container {
+    background-color: rgba(255, 255, 255, 0.555);
+    text-align: center;
+    height: 50vh;
+    width: 50%;
+    max-width: 670px;
+}

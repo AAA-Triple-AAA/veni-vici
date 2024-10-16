@@ -32,4 +32,7 @@
     height: 50vh;
     width: 50%;
     max-width: 670px;
+    min-height: fit-content;
+    padding: 20px;
+    border-radius: 20px;
 }

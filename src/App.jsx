@@ -157,7 +157,10 @@ const App = () => {
                 ]);
         } else if (category === "genre") {
             setExcludeGenres([...excludeGenres, film.genreId]);
-            if (excludedCategories.indexOf(film.genre) === -1)
+            const found = excludedCategories.find(
+                (category) => category.value === film.genre
+            );
+            if (!found)
                 setExcludeCategories([
                     ...excludedCategories,
                     { type: "genre", value: film.genre },
@@ -167,7 +170,7 @@ const App = () => {
 
     const includeCategory = (category, categoryType) => {
         setExcludeCategories(
-            excludedCategories.filter((item) => item !== category)
+            excludedCategories.filter((item) => item.value !== category)
         );
         if (categoryType === "year") {
             setExcludeYears(excludeYears.filter((year) => year !== category));
@@ -256,7 +259,7 @@ const App = () => {
                     .map((category, index) => (
                         <button
                             onClick={() =>
-                                includeCategory(category, category.type)
+                                includeCategory(category.value, category.type)
                             }
                             className="banned-button"
                             key={`${category.value}-${index}`}>

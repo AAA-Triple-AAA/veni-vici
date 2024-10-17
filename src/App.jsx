@@ -41,8 +41,9 @@ const App = () => {
         let allFilmData;
         let filmData;
         let isValid = false;
+        let attempts = 10;
 
-        while (!isValid) {
+        while (!isValid && attempts != 0) {
             try {
                 const randPage = Math.floor(Math.random() * 500) + 1;
                 const randFilm = Math.floor(Math.random() * 20);
@@ -66,11 +67,12 @@ const App = () => {
                     excludeRatings.indexOf(filmData.rating) === -1 &&
                     excludeYears.indexOf(filmData.year) === -1
                 ) {
-                    isValid = true; // If all checks passed, exit loop
+                    isValid = true;
                 }
             } catch (error) {
                 console.log("ERROR OCCURRED (FILM DATA):", error);
             }
+            attempts--;
         }
         return filmData;
     }
@@ -125,21 +127,29 @@ const App = () => {
     const handleExclude = (category) => {
         if (category === "year") {
             setExcludeYears([...excludeYears, film.year]);
-            setExcludeCategories([...excludedCategories, film.year]);
+            if (excludedCategories.indexOf(film.year) === -1)
+                setExcludeCategories([...excludedCategories, film.year]);
         } else if (category === "rating") {
             setExcludeRatings([...excludeRatings, film.rating]);
-            setExcludeCategories([...excludedCategories, `${film.rating}/10`]);
+            if (excludedCategories.indexOf(`${film.rating}/10`) === -1)
+                setExcludeCategories([
+                    ...excludedCategories,
+                    `${film.rating}/10`,
+                ]);
         } else if (category === "director") {
             setExcludeDirectors([...excludeDirectors, film.director]);
-            setExcludeCategories([...excludedCategories, film.director]);
+            if (excludedCategories.indexOf(film.director) === -1)
+                setExcludeCategories([...excludedCategories, film.director]);
         } else if (category === "country") {
             setCountries([
                 ...countries.filter((country) => country != film.countryId),
             ]);
-            setExcludeCategories([...excludedCategories, film.country]);
+            if (excludedCategories.indexOf(film.country) === -1)
+                setExcludeCategories([...excludedCategories, film.country]);
         } else if (category === "genre") {
             setExcludeGenres([...excludeGenres, film.genreId]);
-            setExcludeCategories([...excludedCategories, film.genre]);
+            if (excludedCategories.indexOf(film.genre) === -1)
+                setExcludeCategories([...excludedCategories, film.genre]);
         }
     };
 
@@ -147,19 +157,21 @@ const App = () => {
         <div className="page">
             <div className="history-list">
                 <h3>HISTORY</h3>
-                {history.map((pastFilm) => (
-                    <div className="past-film" key={pastFilm.title}>
-                        <img
-                            className="history-img"
-                            src={`https://image.tmdb.org/t/p/w400${pastFilm.poster}`}
-                            alt=""
-                        />
-                        <h4>{pastFilm.title}</h4>
-                    </div>
-                ))}
+                {history
+                    .map((pastFilm) => (
+                        <div className="past-film" key={pastFilm.title}>
+                            <img
+                                className="history-img"
+                                src={`https://image.tmdb.org/t/p/w400${pastFilm.poster}`}
+                                alt=""
+                            />
+                            <h4>{pastFilm.title}</h4>
+                        </div>
+                    ))
+                    .reverse()}
             </div>
             <div className="film-listing-container">
-                <h2>TRIPLE A FILM RECOMMENDATION SYSTEM</h2>
+                <h2>TRIPLE A&apos;s FILM CURATOR</h2>
                 {count != 0 && film?.title && (
                     <div>
                         <h1>{film.title}</h1>
@@ -174,7 +186,10 @@ const App = () => {
                                 </button>
                                 <button
                                     onClick={() => handleExclude("country")}>
-                                    🌎{film.country}
+                                    🌎
+                                    {film.countryId === "US"
+                                        ? "USA"
+                                        : film.country}
                                 </button>
                                 <button
                                     onClick={() => handleExclude("director")}>
@@ -199,13 +214,17 @@ const App = () => {
                     again.
                 </p>
 
-                {excludedCategories.map((category, index) => (
-                    <button
-                        className="banned-button"
-                        key={`${category}-${index}`}>
-                        {category}
-                    </button>
-                ))}
+                {excludedCategories
+                    .map((category, index) => (
+                        <button
+                            className="banned-button"
+                            key={`${category}-${index}`}>
+                            {category === "United States of America"
+                                ? "USA"
+                                : category}
+                        </button>
+                    ))
+                    .reverse()}
             </div>
         </div>
     );

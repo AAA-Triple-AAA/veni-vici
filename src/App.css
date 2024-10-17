@@ -8,7 +8,7 @@
 
 .history-list,
 .ban-list {
-    background-color: rgba(255, 255, 255, 0.555);
+    background-color: #1e1e1ed6;
     width: 300px;
     height: 95vh;
     display: flex;
@@ -16,6 +16,7 @@
     align-items: center;
     text-align: center;
     flex-direction: column;
+    color: #c72c29;
 }
 
 .history-list {
@@ -29,7 +30,7 @@
 }
 
 .film-listing-container {
-    background-color: rgba(255, 255, 255, 0.555);
+    background-color: #1e1e1ed6;
     text-align: center;
     height: 50vh;
     width: 50%;
@@ -37,6 +38,11 @@
     min-height: fit-content;
     padding: 20px;
     border-radius: 20px;
+    color: #c72c29;
+}
+
+h1 {
+    color: #f2f2f2;
 }
 
 img {
@@ -59,7 +65,7 @@ img {
 }
 
 .banned-button {
-    background-color: red;
+    background-color: #8c8c8c;
     margin-bottom: 5px;
 }
 
@@ -67,7 +73,10 @@ img {
     width: 150px;
 }
 
-h3,
-h4 {
+h3 {
     margin: 0;
+}
+
+h4 {
+    margin-top: -5px;
 }

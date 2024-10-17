@@ -73,6 +73,10 @@ img {
     width: 150px;
 }
 
+.history-list h3 {
+    margin: 0 0 10px 0;
+}
+
 h3 {
     margin: 0;
 }

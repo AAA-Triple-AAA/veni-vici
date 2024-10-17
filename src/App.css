@@ -20,10 +20,12 @@
 
 .history-list {
     margin-left: 1em;
+    overflow: scroll;
 }
 
 .ban-list {
     margin-right: 1em;
+    overflow: scroll;
 }
 
 .film-listing-container {
@@ -54,4 +56,18 @@ img {
     align-items: center;
     justify-content: space-around;
     margin-left: 10px;
+}
+
+.banned-button {
+    background-color: red;
+    margin-bottom: 5px;
+}
+
+.history-img {
+    width: 150px;
+}
+
+h3,
+h4 {
+    margin: 0;
 }

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import "./App.css";
 
 const ACCESS_KEY = import.meta.env.VITE_ACCESS_KEY;
@@ -7,64 +7,160 @@ const App = () => {
     const [count, setCount] = useState(0);
     const [film, setFilm] = useState({});
 
-    const handleFind = async () => {
-        const film = await getRandomFilm();
-        console.log(film);
-        setFilm(film);
-        setCount(count + 1);
-    };
+    const [excludeGenres, setExcludeGenres] = useState([]);
+    const [excludeYears, setExcludeYears] = useState([]);
+    const [excludeRatings, setExcludeRatings] = useState([]);
+    const [excludeDirectors, setExcludeDirectors] = useState([]);
+    const [countries, setCountries] = useState([]);
+    const [countryMap, setCountryMap] = useState([]);
+
+    const [excludedCategories, setExcludeCategories] = useState([]);
+    const [history, setHistory] = useState([]);
+
+    useEffect(() => {
+        getCountries();
+    }, []);
+
+    async function getCountries() {
+        try {
+            const response = await fetch(
+                `https://api.themoviedb.org/3/configuration/countries?api_key=${ACCESS_KEY}`
+            );
+            if (!response.ok) {
+                throw new Error("Failed to fetch countries");
+            }
+            const tempCountries = await response.json();
+            setCountryMap([...tempCountries]);
+            setCountries(tempCountries.map((country) => country.iso_3166_1));
+        } catch (error) {
+            console.error("Error fetching countries:", error);
+        }
+    }
 
     async function getRandomFilm() {
         let allFilmData;
-        const randPage = Math.floor(Math.random() * 500) + 1;
-        const randFilm = Math.floor(Math.random() * 20);
-        do {
-            const response = await fetch(
-                `https://api.themoviedb.org/3/discover/movie?api_key=${ACCESS_KEY}&include_adult=false&include_video=false&language=en-US&page=${randPage}&sort_by=popularity.desc`
-            );
-            allFilmData = await response.json();
-        } while (allFilmData.status_code === 34); // Retry if movie not found
-        return getFilmDetails(allFilmData.results[randFilm].id);
+        let filmData;
+        let isValid = false;
+
+        while (!isValid) {
+            try {
+                const randPage = Math.floor(Math.random() * 500) + 1;
+                const randFilm = Math.floor(Math.random() * 20);
+                const response = await fetch(
+                    `https://api.themoviedb.org/3/discover/movie?api_key=${ACCESS_KEY}&include_adult=false&include_video=false&language=en-US&page=${randPage}&sort_by=popularity.desc&without_genres=${excludeGenres.join(
+                        ","
+                    )}&without_people=${excludeDirectors.join(
+                        "|"
+                    )}&with_origin_country=${countries.join(
+                        "|"
+                    )}&vote_average.gte=1.0`
+                );
+                allFilmData = await response.json();
+                if (!allFilmData.results || allFilmData.results.length === 0) {
+                    continue;
+                }
+                filmData = await getFilmDetails(
+                    allFilmData.results[randFilm].id
+                );
+                if (
+                    excludeRatings.indexOf(filmData.rating) === -1 &&
+                    excludeYears.indexOf(filmData.year) === -1
+                ) {
+                    isValid = true; // If all checks passed, exit loop
+                }
+            } catch (error) {
+                console.log("ERROR OCCURRED (FILM DATA):", error);
+            }
+        }
+        return filmData;
     }
 
     async function getFilmDetails(movieId) {
-        const response = await fetch(
-            `https://api.themoviedb.org/3/movie/${movieId}?api_key=${ACCESS_KEY}&append_to_response=credits`
-        );
-        const filmData = await response.json();
+        try {
+            const response = await fetch(
+                `https://api.themoviedb.org/3/movie/${movieId}?api_key=${ACCESS_KEY}&append_to_response=credits`
+            );
+            const filmData = await response.json();
+            const title = filmData.title;
+            const genre = filmData.genres[0].name;
+            const genreId = filmData.genres[0].id;
+            const year = new Date(filmData.release_date).getFullYear();
+            const country = countryMap.find(
+                (country) => country.iso_3166_1 === filmData.origin_country[0]
+            ).english_name;
+            const countryId = filmData.origin_country[0];
+            const rating = Math.round(filmData.vote_average);
+            const director = filmData.credits.crew.find(
+                (person) => person.job === "Director"
+            )?.name;
+            const poster_path = filmData.poster_path;
 
-        const title = filmData.title;
-        const genre = filmData.genres[0].name;
-        const year = new Date(filmData.release_date).getFullYear();
-        const country = filmData.production_countries.map(
-            (country) => country.name
-        )[0];
-        const rating = Math.round(filmData.vote_average);
-        const director = filmData.credits.crew.find(
-            (person) => person.job === "Director"
-        )?.name;
-
-        const poster_path = filmData.poster_path;
-
-        return {
-            title,
-            genre,
-            year,
-            country,
-            rating,
-            director,
-            poster_path,
-        };
+            return {
+                title,
+                genre,
+                genreId,
+                year,
+                country,
+                countryId,
+                rating,
+                director,
+                poster_path,
+            };
+        } catch {
+            console.log("ERROR OCCURRED (DETAILS)");
+            getRandomFilm();
+        }
     }
+
+    const handleFind = async () => {
+        if (film && film.title) {
+            let pastFilm = { title: film.title, poster: film.poster_path };
+            setHistory([...history, pastFilm]);
+        }
+        const newFilm = await getRandomFilm();
+        setFilm(newFilm);
+        setCount(count + 1);
+    };
+
+    const handleExclude = (category) => {
+        if (category === "year") {
+            setExcludeYears([...excludeYears, film.year]);
+            setExcludeCategories([...excludedCategories, film.year]);
+        } else if (category === "rating") {
+            setExcludeRatings([...excludeRatings, film.rating]);
+            setExcludeCategories([...excludedCategories, `${film.rating}/10`]);
+        } else if (category === "director") {
+            setExcludeDirectors([...excludeDirectors, film.director]);
+            setExcludeCategories([...excludedCategories, film.director]);
+        } else if (category === "country") {
+            setCountries([
+                ...countries.filter((country) => country != film.countryId),
+            ]);
+            setExcludeCategories([...excludedCategories, film.country]);
+        } else if (category === "genre") {
+            setExcludeGenres([...excludeGenres, film.genreId]);
+            setExcludeCategories([...excludedCategories, film.genre]);
+        }
+    };
 
     return (
         <div className="page">
             <div className="history-list">
                 <h3>HISTORY</h3>
+                {history.map((pastFilm) => (
+                    <div className="past-film" key={pastFilm.title}>
+                        <img
+                            className="history-img"
+                            src={`https://image.tmdb.org/t/p/w400${pastFilm.poster}`}
+                            alt=""
+                        />
+                        <h4>{pastFilm.title}</h4>
+                    </div>
+                ))}
             </div>
             <div className="film-listing-container">
                 <h2>TRIPLE A FILM RECOMMENDATION SYSTEM</h2>
-                {count != 0 && (
+                {count != 0 && film?.title && (
                     <div>
                         <h1>{film.title}</h1>
                         <div className="film-info">
@@ -73,11 +169,23 @@ const App = () => {
                                 alt="poster"
                             />
                             <div className="attribute-container">
-                                <button>🎭{film.genre}</button>
-                                <button>🌎{film.country}</button>
-                                <button>🎬{film.director}</button>
-                                <button>⭐{film.rating}/10</button>
-                                <button>📅{film.year}</button>
+                                <button onClick={() => handleExclude("genre")}>
+                                    🎭{film.genre}
+                                </button>
+                                <button
+                                    onClick={() => handleExclude("country")}>
+                                    🌎{film.country}
+                                </button>
+                                <button
+                                    onClick={() => handleExclude("director")}>
+                                    🎬{film.director}
+                                </button>
+                                <button onClick={() => handleExclude("rating")}>
+                                    ⭐{film.rating}/10
+                                </button>
+                                <button onClick={() => handleExclude("year")}>
+                                    📅{film.year}
+                                </button>
                             </div>
                         </div>
                     </div>
@@ -90,6 +198,14 @@ const App = () => {
                     Select an attribute in the film listing to never see it
                     again.
                 </p>
+
+                {excludedCategories.map((category, index) => (
+                    <button
+                        className="banned-button"
+                        key={`${category}-${index}`}>
+                        {category}
+                    </button>
+                ))}
             </div>
         </div>
     );

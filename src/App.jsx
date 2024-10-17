@@ -128,28 +128,66 @@ const App = () => {
         if (category === "year") {
             setExcludeYears([...excludeYears, film.year]);
             if (excludedCategories.indexOf(film.year) === -1)
-                setExcludeCategories([...excludedCategories, film.year]);
+                setExcludeCategories([
+                    ...excludedCategories,
+                    { type: "year", value: film.year },
+                ]);
         } else if (category === "rating") {
             setExcludeRatings([...excludeRatings, film.rating]);
             if (excludedCategories.indexOf(`${film.rating}/10`) === -1)
                 setExcludeCategories([
                     ...excludedCategories,
-                    `${film.rating}/10`,
+                    { type: "rating", value: `${film.rating}/10` },
                 ]);
         } else if (category === "director") {
             setExcludeDirectors([...excludeDirectors, film.director]);
             if (excludedCategories.indexOf(film.director) === -1)
-                setExcludeCategories([...excludedCategories, film.director]);
+                setExcludeCategories([
+                    ...excludedCategories,
+                    { type: "director", value: film.director },
+                ]);
         } else if (category === "country") {
             setCountries([
                 ...countries.filter((country) => country != film.countryId),
             ]);
             if (excludedCategories.indexOf(film.country) === -1)
-                setExcludeCategories([...excludedCategories, film.country]);
+                setExcludeCategories([
+                    ...excludedCategories,
+                    { type: "country", value: film.country },
+                ]);
         } else if (category === "genre") {
             setExcludeGenres([...excludeGenres, film.genreId]);
             if (excludedCategories.indexOf(film.genre) === -1)
-                setExcludeCategories([...excludedCategories, film.genre]);
+                setExcludeCategories([
+                    ...excludedCategories,
+                    { type: "genre", value: film.genre },
+                ]);
+        }
+    };
+
+    const includeCategory = (category, categoryType) => {
+        setExcludeCategories(
+            excludedCategories.filter((item) => item !== category)
+        );
+        if (categoryType === "year") {
+            setExcludeYears(excludeYears.filter((year) => year !== category));
+        } else if (categoryType === "rating") {
+            setExcludeRatings(
+                excludeRatings.filter((rating) => rating !== category)
+            );
+        } else if (categoryType === "director") {
+            setExcludeDirectors(
+                excludeDirectors.filter((director) => director !== category)
+            );
+        } else if (categoryType === "country") {
+            const countryId = countryMap.find(
+                (country) => country.english_name === category
+            ).iso_3166_1;
+            setCountries([...countries, countryId]);
+        } else if (categoryType === "genre") {
+            setExcludeGenres(
+                excludeGenres.filter((genreId) => genreId !== category)
+            );
         }
     };
 
@@ -217,11 +255,14 @@ const App = () => {
                 {excludedCategories
                     .map((category, index) => (
                         <button
+                            onClick={() =>
+                                includeCategory(category, category.type)
+                            }
                             className="banned-button"
-                            key={`${category}-${index}`}>
-                            {category === "United States of America"
+                            key={`${category.value}-${index}`}>
+                            {category.value === "United States of America"
                                 ? "USA"
-                                : category}
+                                : category.value}
                         </button>
                     ))
                     .reverse()}
